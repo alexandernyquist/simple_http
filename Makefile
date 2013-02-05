@@ -1,6 +1,13 @@
+CC = gcc
+INCLUDES = *.h
+INCLUDES += *.c
 CFLAGS=-Wall -g
 
-clean:
-	rm -f main
+all: out
+run: out
 
-all: main
+out:
+	$(CC) $(INCLUDES) -o $@
+
+clean:
+	rm -f *.o out

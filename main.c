@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "http.h"
 
 void die(char* msg) {
 	printf("Error: %s\n", msg);
@@ -66,52 +67,39 @@ void read_file(char* filename, char** buffer) {
 	fclose(filefd);
 }
 
-void read_request(int clientfd, char** buffer) {
-	recv(clientfd, *buffer, 1024, 0);
-}
-
-/*void parse_http_request(struct http_request* request, char** buffer) {
-}
-
-typedef struct http_request {
-	char* method;
-	char* path;
-} http_request;*/
-
 int main() 
 {
 	int port = 80;
 	int sockfd, clientfd;
 	char* buffer = (char*)malloc(1024);
-	//struct http_request* request;
+	struct http_request* request = (struct http_request*)malloc(sizeof(request));
+	struct http_response* response = (struct http_response*)malloc(sizeof(response));
 
 	printf("Creating socket\n");
 	sockfd = create_socket(port);
 
 	printf("Listening for incoming connections\n");
+
 	clientfd = accept_client(sockfd);
 	printf("Client connected\n");
 
-	read_request(clientfd, &buffer);
-	//printf("Request:\n\n%s", buffer);
+	http_read_request(clientfd, &buffer);
+	http_parse_request(request, &buffer);
 	
-	char method[255];
-	char path[255];
-	char rest[255];
-	sscanf(buffer, "%s %s %s", method, path, rest);
-	printf("Method: %s\n", method);
-	printf("Path: %s\n", path);
+	printf("Method: %s\n", request->method);
+	printf("Path: %s\n", request->path);
 	
+	memset(buffer, 0, 1024);
 	read_file("responses/base.html", &buffer);
-	
-	send(clientfd, "HTTP/1.1 200 OK\n", 255, 0);
-	send(clientfd, "Content-Type: text/html\n", 255, 0);
-	send(clientfd, "Content-Length: 100\n", 255, 0);
-	send(clientfd, "\n\n", 255, 0);
-	send(clientfd, buffer, 255, 0);
+	http_set_response(response, &buffer, "text/html",  strlen(buffer));
+	http_respond(clientfd, response);
 
 	close(clientfd);
 	close(sockfd);	
+
+	free(buffer);
+	free(request);
+	free(response);
 
 	return 0;
 }
