@@ -101,14 +101,13 @@ int main()
 	sscanf(buffer, "%s %s %s", method, path, rest);
 	printf("Method: %s\n", method);
 	printf("Path: %s\n", path);
-	//parse_http_request(&request, &buffer);
 	
-	read_file("responses/base.txt", &buffer);
-	char* buffer2 = (char*)malloc(1024);
-	sprintf(buffer2, "You requested %s using %s", path, method);
-	strcat(buffer, buffer2);
-	printf("Writing to client:\n");
-	printf("%s\n\n", buffer);
+	read_file("responses/base.html", &buffer);
+	
+	send(clientfd, "HTTP/1.1 200 OK\n", 255, 0);
+	send(clientfd, "Content-Type: text/html\n", 255, 0);
+	send(clientfd, "Content-Length: 100\n", 255, 0);
+	send(clientfd, "\n\n", 255, 0);
 	send(clientfd, buffer, 255, 0);
 
 	close(clientfd);
