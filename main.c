@@ -8,6 +8,10 @@
 #include <unistd.h>
 #include "http.h"
 
+#define true 1
+#define false 0
+#define bool int
+
 void die(char* msg) {
 	printf("Error: %s\n", msg);
 	printf("Errno: [%d]: %s\n", errno, strerror(errno));
@@ -67,6 +71,14 @@ void read_file(char* filename, char** buffer) {
 	fclose(filefd);
 }
 
+bool file_exists(char* filename) {
+	FILE *file = fopen(filename, "r");
+	if(file == NULL)
+		return false;
+	fclose(file);
+	return true;
+}
+
 int main() 
 {
 	int port = 80;
@@ -86,16 +98,32 @@ int main()
 
 		http_read_request(clientfd, &buffer);
 		http_parse_request(request, &buffer);
-		
+
+		if(strlen(request->path) == 1) {
+			sprintf(request->path, "index");
+		}
+
+		if(strstr(request->path, ".html") == NULL) {
+			strcat(request->path, ".html");
+		}
+
 		printf("Method: %s\n", request->method);
 		printf("Path: %s\n", request->path);
-		
+
+		char* filename = (char*)malloc(1024);
+		sprintf(filename, "responses/%s", request->path);
+		if(file_exists(filename) == false) {
+			sprintf(filename, "responses/404.html");
+		}
+
 		memset(buffer, 0, 1024);
-		read_file("responses/base.html", &buffer);
+		read_file(filename, &buffer);
+
 		http_set_response(response, &buffer, "text/html",  strlen(buffer));
 		http_respond(clientfd, response);
 
 		close(clientfd);
+		free(filename);
 	}
 	
 	close(sockfd);	
