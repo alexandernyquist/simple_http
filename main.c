@@ -99,17 +99,20 @@ int main()
 		http_read_request(clientfd, &buffer);
 		http_parse_request(request, &buffer);
 
+		// If / is requested, substitute it for index
 		if(strlen(request->path) == 1) {
 			sprintf(request->path, "index");
 		}
 
-		if(strstr(request->path, ".html") == NULL) {
+		// Make sure path not containing . ends with .html
+		if(strstr(request->path, ".") == NULL) {
 			strcat(request->path, ".html");
 		}
 
-		printf("Method: %s\n", request->method);
-		printf("Path: %s\n", request->path);
+		printf("[REQUEST] Method: %s\n", request->method);
+		printf("[REQUEST] Path: %s\n", request->path);
 
+		// Make sure that requested file exists
 		char* filename = (char*)malloc(1024);
 		sprintf(filename, "responses/%s", request->path);
 		if(file_exists(filename) == false) {
@@ -119,11 +122,25 @@ int main()
 		memset(buffer, 0, 1024);
 		read_file(filename, &buffer);
 
-		http_set_response(response, &buffer, "text/html",  strlen(buffer));
+		char* content_type = (char*)malloc(sizeof(char) * 255);
+		if(strstr(filename, ".html") != NULL) {
+			sprintf(content_type, "text/html");
+		} else if(strstr(filename, ".css") != NULL) {
+			sprintf(content_type, "text/css");
+		} else if(strstr(filename, ".js") != NULL) {
+			sprintf(content_type, "text/javascript");
+		} else {
+			sprintf(content_type, "application/octet-stream");
+		}
+
+		printf("[RESPONSE] Content-Type: %s\n", content_type);
+		http_set_response(response, &buffer, content_type,  strlen(buffer));
 		http_respond(clientfd, response);
 
 		close(clientfd);
 		free(filename);
+
+		printf("--------------\n");
 	}
 	
 	close(sockfd);	
