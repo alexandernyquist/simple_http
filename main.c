@@ -80,21 +80,24 @@ int main()
 
 	printf("Listening for incoming connections\n");
 
-	clientfd = accept_client(sockfd);
-	printf("Client connected\n");
+	while(1) {
+		clientfd = accept_client(sockfd);
+		printf("Client connected\n");
 
-	http_read_request(clientfd, &buffer);
-	http_parse_request(request, &buffer);
-	
-	printf("Method: %s\n", request->method);
-	printf("Path: %s\n", request->path);
-	
-	memset(buffer, 0, 1024);
-	read_file("responses/base.html", &buffer);
-	http_set_response(response, &buffer, "text/html",  strlen(buffer));
-	http_respond(clientfd, response);
+		http_read_request(clientfd, &buffer);
+		http_parse_request(request, &buffer);
+		
+		printf("Method: %s\n", request->method);
+		printf("Path: %s\n", request->path);
+		
+		memset(buffer, 0, 1024);
+		read_file("responses/base.html", &buffer);
+		http_set_response(response, &buffer, "text/html",  strlen(buffer));
+		http_respond(clientfd, response);
 
-	close(clientfd);
+		close(clientfd);
+	}
+	
 	close(sockfd);	
 
 	free(buffer);

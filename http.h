@@ -12,7 +12,6 @@ typedef struct http_response {
 	char* content_type;
 } http_response;
 
-
 void http_parse_request(struct http_request* request, char** buffer);
 void http_set_response(struct http_response* response, char** data, char* content_type, int content_length);
 void http_respond(int clientfd, struct http_response* response);
