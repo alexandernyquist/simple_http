@@ -1,5 +1,5 @@
-#ifndef __HTTP_H__
-#define __HTTP_H__
+#ifndef __A_HTTP_H__
+#define __A_HTTP_H__
 
 typedef struct http_request {
 	char* method;
