@@ -8,10 +8,11 @@
 int main() 
 {
 	int port = 80;
-	int sockfd, clientfd;
-	char* buffer = (char*)malloc(1024);
-	struct http_request* request = (struct http_request*)malloc(sizeof(request));
-	struct http_response* response = (struct http_response*)malloc(sizeof(response));
+	int sockfd;
+	char* buffer = malloc(sizeof(char*) * 1024);
+	char* filename = malloc(sizeof(char*) * 255);
+	struct http_request* request = malloc(sizeof(*request));
+	struct http_response* response = malloc(sizeof(*response));
 
 	printf("Creating socket\n");
 	sockfd = create_socket(port);
@@ -19,6 +20,7 @@ int main()
 	printf("Listening for incoming connections\n");
 
 	while(1) {
+		int clientfd;
 		clientfd = accept_client(sockfd);
 		printf("Client connected\n");
 
@@ -29,7 +31,6 @@ int main()
 		if(strlen(request->path) == 1) {
 			sprintf(request->path, "index");
 		}
-
 		// Make sure path not containing . ends with .html
 		if(strstr(request->path, ".") == NULL) {
 			strcat(request->path, ".html");
@@ -39,41 +40,36 @@ int main()
 		printf("[REQUEST] Path: %s\n", request->path);
 
 		// Make sure that requested file exists
-		char* filename = (char*)malloc(1024);
 		sprintf(filename, "responses/%s", request->path);
 		if(file_exists(filename) == false) {
 			sprintf(filename, "responses/404.html");
 		}
 
-		memset(buffer, 0, 1024);
+		memset(buffer, '\0', sizeof(char*) * 255);
 		read_file(filename, &buffer);
 
-		char* content_type = (char*)malloc(sizeof(char) * 255);
-		if(strstr(filename, ".html") != NULL) {
-			sprintf(content_type, "text/html");
-		} else if(strstr(filename, ".css") != NULL) {
-			sprintf(content_type, "text/css");
-		} else if(strstr(filename, ".js") != NULL) {
-			sprintf(content_type, "text/javascript");
-		} else {
-			sprintf(content_type, "application/octet-stream");
-		}
-
+		char* content_type = malloc(sizeof(char*) * 255);
+		http_resolve_content_type(&content_type, filename);
+		
 		printf("[RESPONSE] Content-Type: %s\n", content_type);
 		http_set_response(response, &buffer, content_type,  strlen(buffer));
 		http_respond(clientfd, response);
 
 		close(clientfd);
-		free(filename);
 
 		printf("--------------\n");
 	}
-	
-	close(sockfd);	
 
-	free(buffer);
-	free(request);
+	free(response->data);
+	free(response->content_type);
 	free(response);
+
+	free(request->method);
+	free(request->path);
+	free(request);
+	free(filename);
+	
+	close(sockfd);
 
 	return 0;
 }

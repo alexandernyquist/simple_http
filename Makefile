@@ -7,7 +7,7 @@ all: out
 run: out
 
 out:
-	$(CC) $(INCLUDES) -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@
 
 clean:
 	rm -f *.o out

@@ -9,16 +9,16 @@ void http_read_request(int clientfd, char** buffer) {
 }
 
 void http_parse_request(struct http_request* request, char** buffer) {
-	request->method = (char*)malloc(1024);
-	request->path = (char*)malloc(1024);
+	request->method = malloc(sizeof(char*) * 255);
+	request->path = malloc(sizeof(char*) * 255);
 
 	char rest[255];
 	sscanf(*buffer, "%s %s %s", request->method, request->path, rest);
 }
 
 void http_set_response(struct http_response* response, char** data, char* content_type, int content_length) {
-	response->content_type = (char*)malloc(1024);
-	response->data = (char*)malloc(1024);
+	response->content_type = malloc(sizeof(char*) * 255);
+	response->data = malloc(sizeof(char*) * 255);
 
 	response->content_length = content_length;
 	response->content_type = content_type;
@@ -37,4 +37,16 @@ void http_respond(int clientfd, struct http_response* response) {
 	sprintf(headers, "\r\n");
 	send(clientfd, headers, strlen(headers), 0);
 	send(clientfd, response->data, strlen(response->data), 0);
+}
+
+void http_resolve_content_type(char** result, char* filename) {
+	if(strstr(filename, ".html") != NULL) {
+		sprintf(*result, "text/html");
+	} else if(strstr(filename, ".css") != NULL) {
+		sprintf(*result, "text/css");
+	} else if(strstr(filename, ".js") != NULL) {
+		sprintf(*result, "text/javascript");
+	} else {
+		sprintf(*result, "application/octet-stream");
+	}
 }
