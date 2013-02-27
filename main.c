@@ -17,12 +17,9 @@ int main()
 	printf("Creating socket\n");
 	sockfd = create_socket(port);
 
-	printf("Listening for incoming connections\n");
-
 	while(1) {
 		int clientfd;
 		clientfd = accept_client(sockfd);
-		printf("Client connected\n");
 
 		http_read_request(clientfd, &buffer);
 		http_parse_request(request, &buffer);
