@@ -1,6 +1,6 @@
 CC = gcc
-INCLUDES = *.h
-INCLUDES += *.c
+INCLUDES = src/*.h
+INCLUDES += src/*.c
 CFLAGS=-Wall -g
 
 all: out
